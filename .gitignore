@@ -90,3 +90,6 @@ ios/fastlane/test_output/
 firebase-service-account.json
 firebase-service-account-*.json
 *service-account*.json
+
+.venv/
+Backend/.venv/
