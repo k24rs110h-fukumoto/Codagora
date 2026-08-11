@@ -1117,10 +1117,14 @@ class GitHubSetupView(APIView):
             )
         )
 
-        if (
-            not raw_state
-            or not installation_id
-        ):
+        setup_action = str(
+            request.query_params.get(
+                "setup_action"
+            )
+            or ""
+        ).strip().lower()
+
+        if not installation_id:
             return apply_sensitive_response_headers(
                 Response(
                     {
@@ -1148,6 +1152,32 @@ class GitHubSetupView(APIView):
             TypeError,
             ValueError,
         ):
+            return apply_sensitive_response_headers(
+                Response(
+                    {
+                        "status": "error",
+                        "code": (
+                            "invalid_setup"
+                        ),
+                    },
+                    status=(
+                        status
+                        .HTTP_400_BAD_REQUEST
+                    ),
+                )
+            )
+
+        # GitHubの「Redirect on update」では、
+        # 既存Installation更新後にstateなしで
+        # Setup URLへ戻ることがある。
+        # このinstallation_idは信頼せず、
+        # DBへの紐付け処理も行わない。
+        if not raw_state:
+            if setup_action == "update":
+                return github_callback_response(
+                    success=True,
+                )
+
             return apply_sensitive_response_headers(
                 Response(
                     {

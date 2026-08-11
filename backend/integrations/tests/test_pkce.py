@@ -148,6 +148,95 @@ class GitHubPKCETests(TestCase):
             raw_state,
         )
 
+    @override_settings(
+        GITHUB_APP_MOBILE_REDIRECT_URL=(
+            "codagora://github/complete"
+        ),
+    )
+    def test_setup_update_without_state_returns_success(
+        self,
+    ):
+        response = self.client.get(
+            (
+                "/api/v1/integrations/"
+                "github/setup/"
+            ),
+            {
+                "installation_id": "123",
+                "setup_action": "update",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        parsed = urlsplit(
+            response["Location"]
+        )
+
+        query = parse_qs(
+            parsed.query
+        )
+
+        self.assertEqual(
+            parsed.scheme,
+            "codagora",
+        )
+
+        self.assertEqual(
+            query["status"][0],
+            "success",
+        )
+
+    def test_setup_without_state_is_rejected_when_not_update(
+        self,
+    ):
+        response = self.client.get(
+            (
+                "/api/v1/integrations/"
+                "github/setup/"
+            ),
+            {
+                "installation_id": "123",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.assertEqual(
+            response.json()["code"],
+            "invalid_setup",
+        )
+
+    def test_setup_update_rejects_invalid_installation_id(
+        self,
+    ):
+        response = self.client.get(
+            (
+                "/api/v1/integrations/"
+                "github/setup/"
+            ),
+            {
+                "installation_id": "invalid",
+                "setup_action": "update",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+
+        self.assertEqual(
+            response.json()["code"],
+            "invalid_setup",
+        )
+
     @patch(
         "integrations.services."
         "save_github_connection"
