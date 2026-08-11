@@ -119,23 +119,8 @@ services:
       - key: GITHUB_OAUTH_STATE_MINUTES
         value: "10"
 
-      - key: OBJECT_STORAGE_BUCKET
+      - key: BLOB_READ_WRITE_TOKEN
         sync: false
-
-      - key: OBJECT_STORAGE_REGION
-        sync: false
-
-      - key: OBJECT_STORAGE_ENDPOINT_URL
-        sync: false
-
-      - key: OBJECT_STORAGE_ACCESS_KEY
-        sync: false
-
-      - key: OBJECT_STORAGE_SECRET_KEY
-        sync: false
-
-      - key: WORKSPACE_FILE_DOWNLOAD_URL_TTL_SECONDS
-        value: "300"
 
 
 databases:

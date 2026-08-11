@@ -1,6 +1,8 @@
 import os
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import (
+    ImproperlyConfigured,
+)
 
 from .base import *
 
@@ -17,7 +19,8 @@ def env_list(
 
     return [
         item.strip()
-        for item in value.split(",")
+        for item
+        in value.split(",")
         if item.strip()
     ]
 
@@ -32,11 +35,16 @@ def env_bool(
     if value is None:
         return default
 
-    return value.strip().lower() in (
-        "1",
-        "true",
-        "yes",
-        "on",
+    return (
+        value
+        .strip()
+        .lower()
+        in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
     )
 
 
@@ -133,7 +141,6 @@ DATABASES = {
 
 SECURE_SSL_REDIRECT = True
 
-
 if env_bool(
     "DJANGO_TRUST_X_FORWARDED_PROTO",
     default=False,
@@ -208,74 +215,34 @@ if not GITHUB_APP_CALLBACK_URL.startswith(
     )
 
 
-OBJECT_STORAGE_BUCKET = os.environ[
-    "OBJECT_STORAGE_BUCKET"
-]
-
-OBJECT_STORAGE_REGION = os.getenv(
-    "OBJECT_STORAGE_REGION",
-    "",
-)
-
-OBJECT_STORAGE_ENDPOINT_URL = os.getenv(
-    "OBJECT_STORAGE_ENDPOINT_URL",
-    "",
-)
-
-OBJECT_STORAGE_ACCESS_KEY = os.environ[
-    "OBJECT_STORAGE_ACCESS_KEY"
-]
-
-OBJECT_STORAGE_SECRET_KEY = os.environ[
-    "OBJECT_STORAGE_SECRET_KEY"
-]
-
-
-WORKSPACE_FILE_DOWNLOAD_URL_TTL_SECONDS = (
-    env_int(
-        "WORKSPACE_FILE_DOWNLOAD_URL_TTL_SECONDS",
-        default=300,
+BLOB_READ_WRITE_TOKEN = (
+    os.getenv(
+        "BLOB_READ_WRITE_TOKEN",
+        "",
     )
+    .strip()
 )
+
+if not BLOB_READ_WRITE_TOKEN:
+    raise ImproperlyConfigured(
+        "BLOB_READ_WRITE_TOKEN is required "
+        "in production."
+    )
 
 
 STORAGES = {
     "default": {
         "BACKEND": (
-            "storages.backends.s3.S3Storage"
+            "workspace_files."
+            "vercel_storage."
+            "VercelBlobStorage"
         ),
-        "OPTIONS": {
-            "bucket_name": (
-                OBJECT_STORAGE_BUCKET
-            ),
-            "access_key": (
-                OBJECT_STORAGE_ACCESS_KEY
-            ),
-            "secret_key": (
-                OBJECT_STORAGE_SECRET_KEY
-            ),
-            "region_name": (
-                OBJECT_STORAGE_REGION
-                or None
-            ),
-            "endpoint_url": (
-                OBJECT_STORAGE_ENDPOINT_URL
-                or None
-            ),
-            "location": "media",
-            "default_acl": None,
-            "file_overwrite": False,
-            "querystring_auth": True,
-            "querystring_expire": (
-                WORKSPACE_FILE_DOWNLOAD_URL_TTL_SECONDS
-            ),
-        },
     },
 
     "staticfiles": {
         "BACKEND": (
-            "django.contrib.staticfiles.storage."
-            "StaticFilesStorage"
+            "django.contrib.staticfiles."
+            "storage.StaticFilesStorage"
         ),
     },
 }
